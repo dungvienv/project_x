@@ -1,0 +1,13 @@
+hcvn_dbt:
+    target: prod
+    outputs:
+        prod:
+            type: oracle
+            host: dbhdwvn.vn.prod
+            user: HCVN_DUNGVIENV[AP_PRODUCT]
+            password: Fah9Mai9Rive
+            port: 1521
+            protocol: tcp
+            schema: AP_PRODUCT
+            service: hdwvn.homecredit.vn
+            threads: 10

@@ -1,0 +1,91 @@
+version: 2
+
+sources:
+  - name: OWNER_DWH
+    description: Contains all primary table sources that generates from HCVN source systems
+    schema: OWNER_DWH
+    loader: HCVN Source System
+    freshness:
+      error_after:
+        count: 2
+        period: day
+    loaded_at_field: DTIME_MODIFIED
+
+    tables:
+      - name: DC_CLIENT
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: DTIME_MODIFIED >= sysdate - 3
+        loaded_at_field: DTIME_MODIFIED
+
+      - name: DC_CONTRACT
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: DTIME_MODIFIED >= sysdate - 3
+        loaded_at_field: DTIME_MODIFIED
+
+      - name: DC_CREDIT_CASE
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: DTIME_PROPOSAL >= sysdate - 3
+        loaded_at_field: DTIME_PROPOSAL
+
+      - name: DC_EMPLOYEE
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: DTIME_MODIFIED >= sysdate - 3
+        loaded_at_field: DTIME_MODIFIED
+
+      - name: DC_HCO_CONTRACTS
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: DTIME_UPDATED >= sysdate - 3
+        loaded_at_field: DTIME_UPDATED
+
+      - name: DC_LDP_CUSTOMER
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: DATE_EUPDATED_AT >= sysdate - 3
+        loaded_at_field: DATE_EUPDATED_AT
+
+      - name: DC_LDP_CUSTOMER_SOURCE
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: DTIME_CREATED_AT >= sysdate - 3
+        loaded_at_field: DTIME_CREATED_AT
+
+      - name: DC_SALESROOM
+        freshness: null
+      - name: DC_SELLER
+        freshness: null
+
+      - name: F_STORE_OFFER_LIMIT_AD
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: DTIME_MODIFIED >= sysdate - 3
+        loaded_at_field: DTIME_MODIFIED
+
+      - name: F_CREDIT_CASE_AD
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: DTIME_PRE_PROCESS >= sysdate - 3
+        loaded_at_field: DTIME_PRE_PROCESS
+      

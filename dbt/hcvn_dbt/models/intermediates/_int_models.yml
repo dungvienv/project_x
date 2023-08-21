@@ -1,0 +1,116 @@
+version: 2
+
+models:
+  - name: int__crm__appl
+    
+    config:
+      materialized: view
+      enabled: true
+      
+
+
+  - name: int__crm__orbp
+    config:
+      materialized: view
+      enabled: true
+      
+
+  - name: int__crm__offer
+    config:
+      materialized: view
+      enabled: true
+      
+
+
+  - name: int__crm__map_trigger_appl
+    config:
+      materialized: table
+      enabled: true
+      
+      
+
+  - name: int__crm__orbp_2_limit
+    config:
+      materialized: table
+      enabled: true
+      parallel: 16
+      
+      
+  - name: int__crm__appl_2_orbp
+    config:
+      materialized: table
+      enabled: true
+      parallel: 8
+      
+
+  - name: int__crm__appl_2_offer
+    config:
+      materialized: table
+      enabled: true
+      parallel: 8
+      
+
+  - name: int__gma__install
+    config:
+      materialized: incremental
+      incremental_strategy: merge
+      unique_key: dbt_key_skp_gma_install
+      enabled: true
+      parallel: 8
+
+
+  - name: int__gma__first_login
+    config:
+      materialized: incremental
+      incremental_strategy: merge
+      unique_key: dbt_key_skp_gma_first_login
+      enabled: true
+      parallel: 8
+
+  - name: int__tiktok__ad_insights
+    config:
+      materialized: incremental
+      incremental_strategy: merge
+      unique_key: dbt_key_id
+      enabled: true
+      parallel: 8
+
+  - name: int__google__ad_insights
+    config:
+      materialized: incremental
+      incremental_strategy: merge
+      unique_key: dbt_key_id
+      enabled: true
+      parallel: 8
+
+  - name: int__facebook__ad_insights
+    config:
+      materialized: incremental
+      incremental_strategy: merge
+      unique_key: dbt_key_id
+      enabled: true
+      parallel: 8
+
+  - name: int__appsflyer__installs
+    config:
+      materialized: incremental
+      incremental_strategy: merge
+      unique_key: dbt_key_id
+      enabled: true
+      parallel: 8
+
+  - name: int__appsflyer__inapps
+    config:
+      materialized: incremental
+      incremental_strategy: merge
+      unique_key: dbt_key_id
+      enabled: true
+      parallel: 8
+
+  - name: int__appsflyer__inapps_retargeting
+    config:
+      materialized: incremental
+      incremental_strategy: merge
+      unique_key: dbt_key_id
+      enabled: true
+      parallel: 8

@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: test_check_ddl_recency
+    columns:
+      - name: exit_code
+        tests:
+          - accepted_values:
+              values: [0]
+              quote: false
+    config:
+      materialized: view
+      enabled: true
+      tags: ['test']

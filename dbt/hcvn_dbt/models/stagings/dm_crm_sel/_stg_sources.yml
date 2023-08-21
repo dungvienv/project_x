@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: DM_CRM_SEL
+    description: No description yet
+    schema: DM_CRM_SEL
+    loader: Unknown
+    tables:
+      - name: F_CLIENT_CONTACT

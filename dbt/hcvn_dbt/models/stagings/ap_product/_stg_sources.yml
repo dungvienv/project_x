@@ -1,0 +1,158 @@
+version: 2
+
+sources:
+  - name: AP_PRODUCT
+    description: MKT's OLAPs
+    schema: AP_PRODUCT
+    loader: DBT
+    tables:
+      - name: MKT_UPPER_FUNNEL
+        description: Contains ads campaign data
+        loaded_at_field: DATEID
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: DATEID >= sysdate - 3
+
+      - name: MKT_APPSFLYER
+        description: Contains Appsflyer's data
+        loaded_at_field: EVENT_TIME
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: EVENT_TIME >= sysdate - 3
+
+
+      - name: WEBSCORE_LEAD_TEMP
+        description: Contains cashloan landing page data
+        loaded_at_field: CREATED_ON
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: CREATED_ON >= sysdate - 3
+
+
+      - name: IMP_ALL_MKT_SOURCE
+        description: Seeds for Marketing defined sources
+        freshness: null
+  
+      - name: HPL_LEAD_DATA
+        description: No description
+        loaded_at_field: LEAD_TIMESTAMP
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: LEAD_TIMESTAMP >= sysdate - 3
+
+
+      - name: CCX_LEAD_DATA
+        description: No description
+        loaded_at_field: LEAD_TIMESTAMP
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: LEAD_TIMESTAMP >= sysdate - 3
+
+      - name: AIRBYTE_RAW_TIKTOK_ADS_REPORTS_DAILY
+        description: WIP
+        loaded_at_field: _AB_SOURCE_FILE_LAST_MODIFIED
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: _AB_SOURCE_FILE_LAST_MODIFIED >= sysdate - 3
+
+      - name: AIRBYTE_RAW_GOOGLEADS_1698640435_AD_GROUP_AD_REPORT
+        description: WIP
+        loaded_at_field: _AB_SOURCE_FILE_LAST_MODIFIED
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: _AB_SOURCE_FILE_LAST_MODIFIED >= sysdate - 3
+
+      - name: AIRBYTE_RAW_GOOGLEADS_4607976191_AD_GROUP_AD_REPORT
+        description: WIP
+        loaded_at_field: _AB_SOURCE_FILE_LAST_MODIFIED
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: _AB_SOURCE_FILE_LAST_MODIFIED >= sysdate - 3
+
+      - name: AIRBYTE_RAW_FACEBOOKADS_1020643908514628_ADS_INSIGHTS
+        description: WIP
+        loaded_at_field: _AB_SOURCE_FILE_LAST_MODIFIED
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: _AB_SOURCE_FILE_LAST_MODIFIED >= sysdate - 3
+
+      - name: AIRBYTE_RAW_FACEBOOKADS_1801919233484199_ADS_INSIGHTS
+        description: WIP
+        loaded_at_field: _AB_SOURCE_FILE_LAST_MODIFIED
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: _AB_SOURCE_FILE_LAST_MODIFIED >= sysdate - 3
+
+      - name: AIRBYTE_RAW_FACEBOOKADS_1843032105782331_ADS_INSIGHTS
+        description: WIP
+        loaded_at_field: _AB_SOURCE_FILE_LAST_MODIFIED
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: _AB_SOURCE_FILE_LAST_MODIFIED >= sysdate - 3
+
+      - name: AIRBYTE_RAW_FACEBOOKADS_360061471554632_ADS_INSIGHTS
+        description: WIP
+        loaded_at_field: _AB_SOURCE_FILE_LAST_MODIFIED
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: _AB_SOURCE_FILE_LAST_MODIFIED >= sysdate - 3
+
+      - name: AIRBYTE_RAW_FACEBOOKADS_616509509961059_ADS_INSIGHTS
+        description: WIP
+        loaded_at_field: _AB_SOURCE_FILE_LAST_MODIFIED
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: _AB_SOURCE_FILE_LAST_MODIFIED >= sysdate - 3
+
+      - name: AIRBYTE_RAW_APPSFLYER_INSTALLS
+        description: WIP
+        loaded_at_field: _AB_SOURCE_FILE_LAST_MODIFIED
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: _AB_SOURCE_FILE_LAST_MODIFIED >= sysdate - 3
+
+      - name: AIRBYTE_RAW_APPSFLYER_INAPPS
+        description: WIP
+        loaded_at_field: _AB_SOURCE_FILE_LAST_MODIFIED
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: _AB_SOURCE_FILE_LAST_MODIFIED >= sysdate - 3
+
+      - name: AIRBYTE_RAW_APPSFLYER_INAPPS_RETARGETING
+        description: WIP
+        loaded_at_field: _AB_SOURCE_FILE_LAST_MODIFIED
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: _AB_SOURCE_FILE_LAST_MODIFIED >= sysdate - 3

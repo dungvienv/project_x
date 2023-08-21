@@ -1,0 +1,19 @@
+version: 2
+
+sources:
+  - name: DM_CRM
+    description: DM_CRM's OLAPs
+    schema: DM_CRM
+    loader: IT
+    freshness:
+      error_after:
+        count: 2
+        period: day
+      filter: DTIME_UPDATED >= sysdate - 3 
+    loaded_at_field: DTIME_UPDATED
+    
+    tables:
+      - name: FT_CRM_OFFER
+      - name: FT_CRM_ORBP
+      - name: FT_CRM_APPL
+      - name: FT_CRM_APPL_2_OFFER

@@ -1,0 +1,36 @@
+version: '3'
+x-oracle-configuration:
+  environment:
+    &oracle-configs-env
+    ORACLE_HOST: ${ORACLE_HOST:-}
+    ORACLE_SERVICE: ${ORACLE_SERVICE:-}
+    ORACLE_CONN_STRING: ${ORACLE_CONN_STRING:-}
+    ORACLE_PORT: ${ORACLE_PORT:-}
+    ORACLE_PROTOCOL: ${ORACLE_PROTOCOL:-}
+    ORACLE_SCHEMA: ${ORACLE_SCHEMA:-}
+    ORACLE_USER: ${ORACLE_USER:-}
+    ORACLE_PASSWORD: ${ORACLE_PASSWORD:-}
+
+
+services:
+  dbt:
+    build:
+      dockerfile: Dockerfile_dbt
+    command: bash
+    ports:
+      - 8001:8001
+    healthcheck:
+      test: ["CMD-SHELL", 'dbt debug | grep "Connection test:"']
+      interval: 60s
+      timeout: 10s
+      retries: 5
+    restart: always
+    volumes:
+      - oracle-db-volume:/var/lib/oracledb/data   
+    environment:
+      <<: *oracle-configs-env
+      ORA_PYTHON_DRIVER_TYPE: thin
+      DBT_PROFILES_DIR: ${DBT_PROJECT_DIR:-/dbt}
+
+volumes:
+  oracle-db-volume:

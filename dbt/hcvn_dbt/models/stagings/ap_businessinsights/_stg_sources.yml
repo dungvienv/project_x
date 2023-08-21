@@ -1,0 +1,25 @@
+version: 2
+
+sources:
+  - name: AP_BUSINESSINSIGHTS
+    description: No description yet
+    schema: AP_BUSINESSINSIGHTS
+    loader: Unknown
+    
+    tables:
+      - name: GMA_F_DAU
+        loaded_at_field: LOGIN_DATE
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: LOGIN_DATE > sysdate - 3
+
+      - name: ONL_MOB_DAILY_LOGINS_TEMP_02
+        loaded_at_field: LOGIN_DATE
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: LOGIN_DATE > sysdate - 3
+
