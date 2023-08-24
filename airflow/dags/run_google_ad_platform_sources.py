@@ -3,6 +3,7 @@ from airflow.providers.docker.operators.docker import DockerOperator
 from airflow.providers.airbyte.operators.airbyte import AirbyteTriggerSyncOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
+from airflow.utils.dates import days_ago
 
 from datetime import datetime, timedelta
 import requests
@@ -11,7 +12,7 @@ import requests
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2023,1,1),
+    'start_date': days_ago(1),
     'email_on_failure': False,
     'email_on_retry': False,
     'retries':0,
@@ -30,16 +31,16 @@ def ab_partial_update_source(source_id:str, with_tz:bool,**context):
         body = {
             "sourceId":source_id,
             "connectionConfiguration":{
-                "start_date":context['data_interval_start'].replace(hour=7,minute=0,second=0).strftime('%Y-%m-%dT%H:%M:%SZ'),
-                "end_date":context['data_interval_end'].replace(hour=7,minute=0,second=0).strftime('%Y-%m-%dT%H:%M:%SZ')
+                "start_date":(context['data_interval_start'] - timedelta(days=7)).strftime('%Y-%m-%dT%H:%M:%SZ'),
+                "end_date":(context['data_interval_end']).strftime('%Y-%m-%dT%H:%M:%SZ'),
             }
         }
     else:
         body = {
             "sourceId":source_id,
             "connectionConfiguration":{
-                "start_date":context['data_interval_start'].replace(hour=0,minute=0,second=0).strftime('%Y-%m-%d'),
-                "end_date":context['data_interval_end'].replace(hour=0,minute=0,second=0).strftime('%Y-%m-%d')
+                "start_date":(context['data_interval_start'] - timedelta(days=7)).strftime('%Y-%m-%d'),
+                "end_date":(context['data_interval_end']).strftime('%Y-%m-%d')
             }
         }
     result = requests.post(url,json=body,auth=('airbyte','password'))
@@ -60,37 +61,22 @@ dag = DAG(
 # Define the tasks
 
 
-change_google_1698640435_source_dates = PythonOperator(
-    task_id='change_google_1698640435_source_dates',
-    python_callable=ab_partial_update_source,
-    provide_context=True,
-    op_kwargs={'source_id':'be095449-cd97-4225-a85e-10bbd808f861','with_tz':False},
-    dag=dag
-)
+# change_google_source_dates = PythonOperator(
+#     task_id='change_google_source_dates',
+#     python_callable=ab_partial_update_source,
+#     provide_context=True,
+#     op_kwargs={'source_id':'322ae0dc-503e-4f6d-b9f3-565a99359c36','with_tz':False},
+#     dag=dag
+# )
 
-change_google_4607976191_source_dates = PythonOperator(
-    task_id='change_google_4607976191_source_dates',
-    python_callable=ab_partial_update_source,
-    provide_context=True,
-    op_kwargs={'source_id':'d2ba6144-9d66-4662-8ede-73e1d630fd83','with_tz':False},
-    dag=dag
-)
-
-trigger_google_1698640435 = AirbyteTriggerSyncOperator(
-    task_id='trigger_google_1698640435',
-    airbyte_conn_id = 'airbyte_conn',
-    connection_id = 'cbd3404d-ee67-42ac-aa45-07688741d973',
-    asynchronous=False,
-    dag=dag
-)
-
-trigger_google_4607976191 = AirbyteTriggerSyncOperator(
-    task_id='trigger_google_4607976191',
-    airbyte_conn_id = 'airbyte_conn',
-    connection_id = '8ca6a59f-6b7e-4cff-8efb-6cb465f5fd1f',
-    asynchronous=False,
-    dag=dag
-)
+# trigger_google = AirbyteTriggerSyncOperator(
+#     task_id='trigger_google',
+#     airbyte_conn_id = 'airbyte_conn',
+#     connection_id = '180e1bb1-711f-4e17-8fe0-e9281d3130b8',
+#     asynchronous=False,
+#     timeout=18000,
+#     dag=dag
+# )
 
 run_dbt_google = DockerOperator(
     task_id='run_dbt_google',
@@ -101,12 +87,11 @@ run_dbt_google = DockerOperator(
     command='/bin/bash -c "dbt build -m +int__google__ad_insights"',
     retries=0,
     # retry_delay=timedelta(minutes=20),
-    execution_timeout=timedelta(minutes=2),
+    # execution_timeout=timedelta(minutes=2),
     dag=dag,
 )
 
 
 # Define task dependencies
-change_google_1698640435_source_dates >> trigger_google_1698640435
-change_google_4607976191_source_dates >> trigger_google_4607976191
-[trigger_google_1698640435,trigger_google_4607976191] >> run_dbt_google
+# change_google_source_dates >> trigger_google >> run_dbt_google
+run_dbt_google

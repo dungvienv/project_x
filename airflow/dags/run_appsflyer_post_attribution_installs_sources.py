@@ -24,16 +24,16 @@ default_args = {
 # Define all environment variables
 aws_date_param = '{{ macros.ds_add(data_interval_end | ds, -1) }}'
 aws_prev_date_param = '{{ macros.ds_add(data_interval_end | ds, -2) }}'
-appsflyer_dir = 'temp/appsflyer/inapps_retargeting/'
+appsflyer_dir = 'temp/appsflyer/post_attribution_installs/'
 sync_cmd = f'aws s3 sync \
             --region "eu-west-1" \
             --exclude "*" \
-            --include "t=inapps_retargeting/dt={aws_date_param}/*.parquet" \
-            --include "t=inapps_retargeting/dt={aws_prev_date_param}/*.parquet" \
+            --include "t=post_attribution_installs/dt={aws_date_param}/*.parquet" \
+            --include "t=post_attribution_installs/dt={aws_prev_date_param}/*.parquet" \
             --delete \
             s3://af-ext-reports/b5ef-acc-vh9FVWSA-b5ef/mkt-gma/ $AIRFLOW_HOME/{appsflyer_dir}'
 
-destination_table = 'CUSTOM_RAW_APPSFLYER_INAPPS_RETARGETING'
+destination_table = 'CUSTOM_RAW_APPSFLYER_POST_ATTRIBUTION_INSTALLS'
 oracle_conn_id='oracle_conn'
 
 # Define functions
@@ -74,7 +74,7 @@ def extract_and_insert(dir_path,desination_table_name,oracle_conn_id) -> None:
 
 # Define the DAG
 dag = DAG(
-    'run_appsflyer_inapps_retargeting_sources',
+    'run_appsflyer_post_attribution_installs_sources',
     default_args=default_args,
     schedule_interval='0 3 * * *',
     start_date=days_ago(1),
@@ -84,8 +84,8 @@ dag = DAG(
 )
 
 # Define the operators
-sync_appsflyer_inapps_retargeting = BashOperator(
-    task_id='sync_appsflyer_inapps_retargeting',
+sync_appsflyer_post_attribution_installs = BashOperator(
+    task_id='sync_appsflyer_post_attribution_installs',
     bash_command=sync_cmd,
     dag=dag,
 )
@@ -110,8 +110,8 @@ oracle_create_table = OracleOperator(
     oracle_conn_id=oracle_conn_id,
     dag=dag
 )
-create_appsflyer_inapps_retargeting_dir = BashOperator(
-    task_id='create_appsflyer_inapps_retargeting_dir',
+create_appsflyer_post_attribution_installs_dir = BashOperator(
+    task_id='create_appsflyer_post_attribution_installs_dir',
     bash_command=f"""
         if [ ! -d "$AIRFLOW_HOME/{appsflyer_dir}" ]; then
         echo "Directory does not exist. Creating directory..."
@@ -132,19 +132,20 @@ oracle_insert_operator = PythonOperator(
     dag=dag,
 )
 
-run_dbt_appsflyer_inapps_retargeting = DockerOperator(
-    task_id='run_dbt_appsflyer_inapps_retargeting',
-    image='dbt-dbt',
-    api_version='auto',
-    auto_remove=True,
-    environment={'ORA_PYTHON_DRIVER_TYPE':'thin'},
-    command='/bin/bash -c "dbt build -m +int__appsflyer__inapps_retargeting"',
-    retries=0,
-    # retry_delay=timedelta(minutes=20),
-    # execution_timeout=timedelta(minutes=2),
-    dag=dag,
-)
+# run_dbt_appsflyer_post_attribution_installs = DockerOperator(
+#     task_id='run_dbt_appsflyer_post_attribution_installs',
+#     image='dbt-dbt',
+#     api_version='auto',
+#     auto_remove=True,
+#     environment={'ORA_PYTHON_DRIVER_TYPE':'thin'},
+#     command='/bin/bash -c "dbt build -m +int__appsflyer__post_attribution_installs"',
+#     retries=0,
+#     # retry_delay=timedelta(minutes=20),
+#     # execution_timeout=timedelta(minutes=2),
+#     dag=dag,
+# )
 
 
 # Define the DAG dependencies
-create_appsflyer_inapps_retargeting_dir >> sync_appsflyer_inapps_retargeting >> oracle_create_table >> oracle_insert_operator >> run_dbt_appsflyer_inapps_retargeting
+create_appsflyer_post_attribution_installs_dir >> sync_appsflyer_post_attribution_installs >> oracle_create_table >> oracle_insert_operator 
+# >> run_dbt_appsflyer_post_attribution_installs

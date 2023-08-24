@@ -1,6 +1,5 @@
 with 
-src__googleads_1698640435 as (select * from {{ source('AP_PRODUCT','AIRBYTE_RAW_GOOGLEADS_1698640435_AD_GROUP_AD_REPORT') }}),
-src__googleads_4607976191 as (select * from {{ source('AP_PRODUCT','AIRBYTE_RAW_GOOGLEADS_4607976191_AD_GROUP_AD_REPORT') }}),
+src__googleads as (select * from {{ source('AP_PRODUCT','AIRBYTE_RAW_GOOGLEADS_AD_GROUP_AD_REPORT') }}),
 final as (
 SELECT
     JSON_VALUE("_AIRBYTE_DATA", '$."ad_group_ad.ad_group"') AS ad_group_ad_group,
@@ -41,48 +40,7 @@ SELECT
     JSON_VALUE("_AIRBYTE_DATA", '$."metrics.conversions_from_interactions_rate"') AS metrics_conversions_from_interactions_rate,
     JSON_VALUE("_AIRBYTE_DATA", '$."metrics.cost_micros"') AS metrics_cost_micros,
     JSON_VALUE("_AIRBYTE_DATA", '$."segments.date"') AS segments_date
-FROM src__googleads_1698640435
-UNION
-SELECT
-    JSON_VALUE("_AIRBYTE_DATA", '$."ad_group_ad.ad_group"') AS ad_group_ad_group,
-    JSON_VALUE("_AIRBYTE_DATA", '$."ad_group_ad.ad.added_by_google_ads"') AS ad_group_ad_added_by_google_ads,
-    JSON_VALUE("_AIRBYTE_DATA", '$."metrics.conversions"') AS metrics_conversions,
-    JSON_VALUE("_AIRBYTE_DATA", '$."segments.month"') AS segments_month,
-    JSON_VALUE("_AIRBYTE_DATA", '$."metrics.interactions"') AS metrics_interactions,
-    JSON_VALUE("_AIRBYTE_DATA", '$."customer.currency_code"') AS customer_currency_code,
-    JSON_VALUE("_AIRBYTE_DATA", '$."segments.year"') AS segments_year,
-    JSON_VALUE("_AIRBYTE_DATA", '$."customer.time_zone"') AS customer_time_zone,
-    JSON_VALUE("_AIRBYTE_DATA", '$."metrics.engagements"') AS metrics_engagements,
-    JSON_VALUE("_AIRBYTE_DATA", '$."campaign.id"') AS campaign_id,
-    JSON_VALUE("_AIRBYTE_DATA", '$."segments.week"') AS segments_week,
-    JSON_VALUE("_AIRBYTE_DATA", '$."metrics.percent_new_visitors"') AS metrics_percent_new_visitors,
-    JSON_VALUE("_AIRBYTE_DATA", '$."ad_group.name"') AS ad_group_name,
-    JSON_VALUE("_AIRBYTE_DATA", '$."metrics.clicks"') AS metrics_clicks,
-    JSON_VALUE("_AIRBYTE_DATA", '$."ad_group.status"') AS ad_group_status,
-    JSON_VALUE("_AIRBYTE_DATA", '$."segments.day_of_week"') AS segments_day_of_week,
-    JSON_VALUE("_AIRBYTE_DATA", '$."segments.quarter"') AS segments_quarter,
-    JSON_VALUE("_AIRBYTE_DATA", '$."ad_group_ad.ad.final_mobile_urls"') AS ad_group_ad_final_mobile_urls,
-    JSON_VALUE("_AIRBYTE_DATA", '$."ad_group_ad.policy_summary.approval_status"') AS ad_group_ad_policy_summary_approval_status,
-    JSON_VALUE("_AIRBYTE_DATA", '$."metrics.bounce_rate"') AS metrics_bounce_rate,
-    JSON_VALUE("_AIRBYTE_DATA", '$."ad_group_ad.ad_strength"') AS ad_group_ad_strength,
-    JSON_VALUE("_AIRBYTE_DATA", '$."ad_group_ad.ad.final_urls"') AS ad_group_ad_final_urls,
-    JSON_VALUE("_AIRBYTE_DATA", '$."metrics.conversions_value"') AS metrics_conversions_value,
-    JSON_VALUE("_AIRBYTE_DATA", '$."ad_group_ad.ad.id"') AS ad_group_ad_id,
-    JSON_VALUE("_AIRBYTE_DATA", '$."segments.ad_network_type"') AS segments_ad_network_type,
-    JSON_VALUE("_AIRBYTE_DATA", '$."metrics.impressions"') AS metrics_impressions,
-    JSON_VALUE("_AIRBYTE_DATA", '$."ad_group.id"') AS ad_group_id,
-    JSON_VALUE("_AIRBYTE_DATA", '$."ad_group_ad.status"') AS ad_group_ad_status,
-    JSON_VALUE("_AIRBYTE_DATA", '$."metrics.view_through_conversions"') AS metrics_view_through_conversions,
-    JSON_VALUE("_AIRBYTE_DATA", '$."campaign.name"') AS campaign_name,
-    JSON_VALUE("_AIRBYTE_DATA", '$."metrics.video_views"') AS metrics_video_views,
-    JSON_VALUE("_AIRBYTE_DATA", '$."campaign.status"') AS campaign_status,
-    JSON_VALUE("_AIRBYTE_DATA", '$."ad_group_ad.ad.type"') AS ad_group_ad_type,
-    JSON_VALUE("_AIRBYTE_DATA", '$."customer.id"') AS customer_id,
-    JSON_VALUE("_AIRBYTE_DATA", '$."ad_group.base_ad_group"') AS ad_group_base_ad_group,
-    JSON_VALUE("_AIRBYTE_DATA", '$."metrics.conversions_from_interactions_rate"') AS metrics_conversions_from_interactions_rate,
-    JSON_VALUE("_AIRBYTE_DATA", '$."metrics.cost_micros"') AS metrics_cost_micros,
-    JSON_VALUE("_AIRBYTE_DATA", '$."segments.date"') AS segments_date
-FROM src__googleads_4607976191
+FROM src__googleads
 )
 
 select * from final

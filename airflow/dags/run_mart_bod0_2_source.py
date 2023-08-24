@@ -3,6 +3,7 @@ from airflow.providers.docker.operators.docker import DockerOperator
 from airflow.providers.airbyte.operators.airbyte import AirbyteTriggerSyncOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
+from airflow.utils.dates import days_ago
 
 from datetime import datetime, timedelta
 import requests
@@ -11,7 +12,7 @@ import requests
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2023, 8, 15),
+    'start_date': days_ago(1),
     'email_on_failure': False,
     'email_on_retry': False,
 }

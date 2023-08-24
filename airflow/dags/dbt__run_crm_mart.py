@@ -2,12 +2,13 @@ from airflow import DAG
 from airflow.providers.docker.operators.docker import DockerOperator
 from airflow.operators.bash import BashOperator
 from datetime import datetime, timedelta
+from airflow.utils.dates import days_ago
 
 # Define default arguments for the DAG
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2023, 7, 25),
+    'start_date': days_ago(1),
     'email_on_failure': False,
     'email_on_retry': False,
 

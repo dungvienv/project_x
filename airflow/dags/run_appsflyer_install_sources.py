@@ -1,81 +1,136 @@
 from airflow import DAG
-from airflow.providers.docker.operators.docker import DockerOperator
-from airflow.providers.airbyte.operators.airbyte import AirbyteTriggerSyncOperator
-from airflow.operators.python import PythonOperator
-from airflow.operators.bash import BashOperator
-from airflow.utils.dates import days_ago
 from datetime import datetime, timedelta
-import requests
+import pyarrow.parquet as pq
+import pyarrow as pa
+from airflow.utils.dates import days_ago
+from airflow.providers.oracle.hooks.oracle import OracleHook
+from airflow.operators.bash import BashOperator
+from airflow.operators.python import PythonOperator
+from airflow.providers.oracle.operators.oracle import OracleOperator
+from airflow.providers.docker.operators.docker import DockerOperator
+from airflow.decorators import dag, task
+import os
 
 # Define default arguments for the DAG
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': days_ago(2),
     'email_on_failure': False,
     'email_on_retry': False,
-    'retries':0,
-    'catchup':False,
-
+    'retries': 0,
+    'retry_delay': timedelta(hours=1)
 }
 
-# Define the variables
-dbt_project_dir = '/opt/components/dbt'
+# Define all environment variables
+aws_date_param = '{{ macros.ds_add(data_interval_end | ds, -1) }}'
+aws_prev_date_param = '{{ macros.ds_add(data_interval_end | ds, -2) }}'
+appsflyer_dir = 'temp/appsflyer/installs/'
+sync_cmd = f'aws s3 sync \
+            --region "eu-west-1" \
+            --exclude "*" \
+            --include "t=installs/dt={aws_date_param}/*.parquet" \
+            --include "t=installs/dt={aws_prev_date_param}/*.parquet" \
+            --delete \
+            s3://af-ext-reports/b5ef-acc-vh9FVWSA-b5ef/mkt-gma/ $AIRFLOW_HOME/{appsflyer_dir}'
 
+destination_table = 'CUSTOM_RAW_APPSFLYER_INSTALLS'
+oracle_conn_id='oracle_conn'
 
 # Define functions
-def ab_partial_update_source(source_id:str, with_tz:bool,**context):
-    url = 'http://host.docker.internal:8000/api/v1/sources/partial_update'
-    if with_tz:
-        body = {
-            "sourceId":source_id,
-            "connectionConfiguration":{
-                "provider": {"start_date":context['data_interval_start'].strftime('%Y-%m-%dT%H:%M:%SZ')}
-            }
-        }
-    else:
-        body = {
-            "sourceId":source_id,
-            "connectionConfiguration":{
-                "provider": {"start_date":context['data_interval_start'].strftime('%Y-%m-%d')}
-            }
-        }
-    result = requests.post(url,json=body,auth=('airbyte','password'))
-    return result.json()
+def extract_and_insert(dir_path,desination_table_name,oracle_conn_id) -> None:
+    oracle_hook = OracleHook(oracle_conn_id)
+    oracle_conn = oracle_hook.get_conn()
+    cursor = oracle_conn.cursor()
+    file_paths = []
+
+    for root, dirs, files in os.walk(dir_path, topdown=False):
+        for file in files:
+            if file.endswith(".parquet"):
+                print(f'Reading file: {file}')
+                file_paths.append(os.path.join(root,file))
+
+     
+    # Read Parquet files
+    tables = [pq.read_table(file) for file in file_paths]
+
+    # Combine tables
+    merged_table = pa.concat_tables(tables)
+    print('All merged!')
+    # Convert merged table to a Pandas DataFrame
+    merged_df = merged_table.to_pandas()
+    
+    # Transform DataFrame rows to JSON
+    json_data = merged_df.to_json(orient='records', lines=True)
+    rows = [(json_item,) for json_item in json_data.split('\n') if json_item]
+    cursor.executemany(f"insert into {desination_table_name}(json_data) values (:1)", rows)
+    oracle_conn.commit()
+    cursor.close()
+    oracle_conn.close()
+
+
+    
 
 
 
-# Create the DAG instance
+# Define the DAG
 dag = DAG(
     'run_appsflyer_install_sources',
     default_args=default_args,
-    description='An example DAG with DockerOperator',
-    schedule_interval=timedelta(days=1),  # Set the schedule interval
+    schedule_interval='0 3 * * *',
+    start_date=days_ago(1),
+    catchup=False,
     concurrency=1,
     max_active_runs=1
 )
 
-# Define the tasks
-
-change_appsflyer_install_source_dates = PythonOperator(
-    task_id='change_appsflyer_install_source_dates',
-    python_callable=ab_partial_update_source,
-    provide_context=True,
-    op_kwargs={'source_id':'3f48f7df-737b-4f79-aac4-3dc05d8b1a26','with_tz':True},
-    dag=dag
+# Define the operators
+sync_appsflyer_installs = BashOperator(
+    task_id='sync_appsflyer_installs',
+    bash_command=sync_cmd,
+    dag=dag,
 )
 
+oracle_create_table = OracleOperator(
+    task_id='oracle_create_table',
+    sql=f"""
+        BEGIN
+            EXECUTE IMMEDIATE 'TRUNCATE TABLE {destination_table}';
+            DBMS_OUTPUT.PUT_LINE('Table created successfully.');
+        EXCEPTION
+            WHEN OTHERS THEN
+                IF (SQLCODE = -942) THEN  -- Table not existed error
+                    EXECUTE IMMEDIATE 'CREATE TABLE {destination_table}(json_data NCLOB)';
 
-trigger_appsflyer_installs = AirbyteTriggerSyncOperator(
-    task_id='trigger_appsflyer_installs',
-    airbyte_conn_id = 'airbyte_conn',
-    connection_id = 'a5234e9c-639b-463a-9a39-1f3310712ee4',
-    asynchronous=False,
-    # execution_timeout=timedelta(minutes=5),
-    retries=0,
+                ELSE
+                    DBMS_OUTPUT.PUT_LINE('Unknown error : '||SQLERRM);
+                    RAISE;
+                END IF;
+        END;
+        """,
+    oracle_conn_id=oracle_conn_id,
     dag=dag
 )
+create_appsflyer_installs_dir = BashOperator(
+    task_id='create_appsflyer_installs_dir',
+    bash_command=f"""
+        if [ ! -d "$AIRFLOW_HOME/{appsflyer_dir}" ]; then
+        echo "Directory does not exist. Creating directory..."
+        mkdir -p "$AIRFLOW_HOME/{appsflyer_dir}"
+        echo "Directory created."
+        else
+        echo "Directory already exists."
+        fi
+    """,
+    dag=dag,
 
+)
+
+oracle_insert_operator = PythonOperator(
+    task_id = 'oracle_insert_operator',
+    python_callable=extract_and_insert,
+    op_kwargs={"dir_path":appsflyer_dir, "desination_table_name":destination_table, "oracle_conn_id":oracle_conn_id},
+    dag=dag,
+)
 
 run_dbt_appsflyer_installs = DockerOperator(
     task_id='run_dbt_appsflyer_installs',
@@ -91,5 +146,5 @@ run_dbt_appsflyer_installs = DockerOperator(
 )
 
 
-# Define task dependencies
-change_appsflyer_install_source_dates >> trigger_appsflyer_installs >> run_dbt_appsflyer_installs
+# Define the DAG dependencies
+create_appsflyer_installs_dir >> sync_appsflyer_installs >> oracle_create_table >> oracle_insert_operator >> run_dbt_appsflyer_installs

@@ -3,6 +3,7 @@ from airflow.providers.docker.operators.docker import DockerOperator
 from airflow.providers.airbyte.operators.airbyte import AirbyteTriggerSyncOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
+from airflow.utils.dates import days_ago
 
 from datetime import datetime, timedelta
 import requests
@@ -11,7 +12,7 @@ import requests
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2023,1,1),
+    'start_date': days_ago(1),
     'email_on_failure': False,
     'email_on_retry': False,
     'retries':0,
@@ -30,16 +31,16 @@ def ab_partial_update_source(source_id:str, with_tz:bool,**context):
         body = {
             "sourceId":source_id,
             "connectionConfiguration":{
-                "start_date":context['data_interval_start'].replace(hour=7,minute=0,second=0).strftime('%Y-%m-%dT%H:%M:%SZ'),
-                "end_date":context['data_interval_end'].replace(hour=7,minute=0,second=0).strftime('%Y-%m-%dT%H:%M:%SZ')
+                "start_date":(context['data_interval_start'] - timedelta(days=7)).strftime('%Y-%m-%dT%H:%M:%SZ'),
+                "end_date":(context['data_interval_end']).strftime('%Y-%m-%dT%H:%M:%SZ'),
             }
         }
     else:
         body = {
             "sourceId":source_id,
             "connectionConfiguration":{
-                "start_date":context['data_interval_start'].replace(hour=0,minute=0,second=0).strftime('%Y-%m-%d'),
-                "end_date":context['data_interval_end'].replace(hour=0,minute=0,second=0).strftime('%Y-%m-%d')
+                "start_date":(context['data_interval_start'] - timedelta(days=7)).strftime('%Y-%m-%d'),
+                "end_date":(context['data_interval_end']).strftime('%Y-%m-%d')
             }
         }
     result = requests.post(url,json=body,auth=('airbyte','password'))
@@ -60,86 +61,91 @@ dag = DAG(
 # Define the tasks
 
 
-change_facebook_1020643908514628_source_dates = PythonOperator(
-    task_id='change_facebook_1020643908514628_source_dates',
-    python_callable=ab_partial_update_source,
-    provide_context=True,
-    op_kwargs={'source_id':'2bc7bafc-1dcb-4be1-b49c-690ab36c2b6a','with_tz':True},
-    dag=dag
-)
+# change_facebook_1020643908514628_source_dates = PythonOperator(
+#     task_id='change_facebook_1020643908514628_source_dates',
+#     python_callable=ab_partial_update_source,
+#     provide_context=True,
+#     op_kwargs={'source_id':'893f8ece-1e45-4731-8b63-2f4f7a98571b','with_tz':True},
+#     dag=dag
+# )
 
-change_facebook_1801919233484199_source_dates = PythonOperator(
-    task_id='change_facebook_1801919233484199_source_dates',
-    python_callable=ab_partial_update_source,
-    provide_context=True,
-    op_kwargs={'source_id':'628e9751-20e9-42ec-958e-2930efa23272','with_tz':True},
-    dag=dag
-)
+# change_facebook_1801919233484199_source_dates = PythonOperator(
+#     task_id='change_facebook_1801919233484199_source_dates',
+#     python_callable=ab_partial_update_source,
+#     provide_context=True,
+#     op_kwargs={'source_id':'818c8571-847f-405a-b320-2427f1e55e0a','with_tz':True},
+#     dag=dag
+# )
 
-change_facebook_1843032105782331_source_dates = PythonOperator(
-    task_id='change_facebook_1843032105782331_source_dates',
-    python_callable=ab_partial_update_source,
-    provide_context=True,
-    op_kwargs={'source_id':'a0b6e4db-8041-419c-bd9f-4c716ce9f724','with_tz':True},
-    dag=dag
-)
+# change_facebook_1843032105782331_source_dates = PythonOperator(
+#     task_id='change_facebook_1843032105782331_source_dates',
+#     python_callable=ab_partial_update_source,
+#     provide_context=True,
+#     op_kwargs={'source_id':'ca913a76-9001-48e1-8934-be1d0c0bce82','with_tz':True},
+#     dag=dag
+# )
 
-change_facebook_360061471554632_source_dates = PythonOperator(
-    task_id='change_facebook_360061471554632_source_dates',
-    python_callable=ab_partial_update_source,
-    provide_context=True,
-    op_kwargs={'source_id':'95dff50d-56f0-42a0-9100-6dced56deaff','with_tz':True},
-    dag=dag
-)
+# change_facebook_360061471554632_source_dates = PythonOperator(
+#     task_id='change_facebook_360061471554632_source_dates',
+#     python_callable=ab_partial_update_source,
+#     provide_context=True,
+#     op_kwargs={'source_id':'3a2578a9-2162-4ba7-8457-a5e6bd66d070','with_tz':True},
+#     dag=dag
+# )
 
-change_facebook_616509509961059_source_dates = PythonOperator(
-    task_id='change_facebook_616509509961059_source_dates',
-    python_callable=ab_partial_update_source,
-    provide_context=True,
-    op_kwargs={'source_id':'7761ed46-597f-4930-8fe6-625c9d7399f8','with_tz':True},
-    dag=dag
-)
+# change_facebook_616509509961059_source_dates = PythonOperator(
+#     task_id='change_facebook_616509509961059_source_dates',
+#     python_callable=ab_partial_update_source,
+#     provide_context=True,
+#     op_kwargs={'source_id':'ab6270f8-b496-433c-86d9-828baab5a56e','with_tz':True},
+#     dag=dag
+# )
 
 
-trigger_facebook_1020643908514628 = AirbyteTriggerSyncOperator(
-    task_id='trigger_facebook_1020643908514628',
-    airbyte_conn_id = 'airbyte_conn',
-    connection_id = '3832e186-0278-4432-af9e-9f52c2edb1d4',
-    asynchronous=False,
-    dag=dag
-)
+# trigger_facebook_1020643908514628 = AirbyteTriggerSyncOperator(
+#     task_id='trigger_facebook_1020643908514628',
+#     airbyte_conn_id = 'airbyte_conn',
+#     connection_id = 'c80ecc81-553d-4ad5-9b63-a83ec1feb19d',
+#     asynchronous=False,
+#     timeout=18000,
+#     dag=dag
+# )
 
-trigger_facebook_1801919233484199 = AirbyteTriggerSyncOperator(
-    task_id='trigger_facebook_1801919233484199',
-    airbyte_conn_id = 'airbyte_conn',
-    connection_id = '11893a9f-1f71-47fa-8d8e-eedfe06d21c5',
-    asynchronous=False,
-    dag=dag
-)
+# trigger_facebook_1801919233484199 = AirbyteTriggerSyncOperator(
+#     task_id='trigger_facebook_1801919233484199',
+#     airbyte_conn_id = 'airbyte_conn',
+#     connection_id = '247ae9b4-d8b4-4ddc-a01f-478b3101ab8a',
+#     asynchronous=False,
+#     timeout=18000,
+#     dag=dag
+# )
 
-trigger_facebook_1843032105782331 = AirbyteTriggerSyncOperator(
-    task_id='trigger_facebook_1843032105782331',
-    airbyte_conn_id = 'airbyte_conn',
-    connection_id = 'd924ac41-dbc2-40ab-bb4d-a4b3245c0fc8',
-    asynchronous=False,
-    dag=dag
-)
+# trigger_facebook_1843032105782331 = AirbyteTriggerSyncOperator(
+#     task_id='trigger_facebook_1843032105782331',
+#     airbyte_conn_id = 'airbyte_conn',
+#     connection_id = 'e3af74f3-526f-4be2-bb0a-b488ebc79ba8',
+#     asynchronous=False,
+#     timeout=18000,
+#     dag=dag
+# )
 
-trigger_facebook_360061471554632 = AirbyteTriggerSyncOperator(
-    task_id='trigger_facebook_360061471554632',
-    airbyte_conn_id = 'airbyte_conn',
-    connection_id = '5f271a8f-e41c-416a-bdea-d71f933a9971',
-    asynchronous=False,
-    dag=dag
-)
+# trigger_facebook_360061471554632 = AirbyteTriggerSyncOperator(
+#     task_id='trigger_facebook_360061471554632',
+#     airbyte_conn_id = 'airbyte_conn',
+#     connection_id = 'e9b24a72-cbc8-4d69-b9ef-bfb9b7ec2c13',
+#     asynchronous=False,
+#     timeout=18000,
+#     dag=dag
+# )
 
-trigger_facebook_616509509961059 = AirbyteTriggerSyncOperator(
-    task_id='trigger_facebook_616509509961059',
-    airbyte_conn_id = 'airbyte_conn',
-    connection_id = '05075067-5c03-4375-a66e-56c951d1aaf4',
-    asynchronous=False,
-    dag=dag
-)
+# trigger_facebook_616509509961059 = AirbyteTriggerSyncOperator(
+#     task_id='trigger_facebook_616509509961059',
+#     airbyte_conn_id = 'airbyte_conn',
+#     connection_id = 'e6036090-ddf1-4be9-90ee-fa2f8382c4b0',
+#     asynchronous=False,
+#     timeout=18000,
+#     dag=dag
+# )
 
 
 
@@ -159,9 +165,10 @@ run_dbt_facebook = DockerOperator(
 
 # Define task dependencies
 
-change_facebook_1020643908514628_source_dates >> trigger_facebook_1020643908514628
-change_facebook_1801919233484199_source_dates >> trigger_facebook_1801919233484199
-change_facebook_1843032105782331_source_dates >> trigger_facebook_1843032105782331
-change_facebook_360061471554632_source_dates >> trigger_facebook_360061471554632
-change_facebook_616509509961059_source_dates >> trigger_facebook_616509509961059
-[trigger_facebook_1020643908514628,trigger_facebook_1801919233484199,trigger_facebook_1843032105782331,trigger_facebook_360061471554632,trigger_facebook_616509509961059] >> run_dbt_facebook
+# change_facebook_1020643908514628_source_dates >> trigger_facebook_1020643908514628
+# change_facebook_1801919233484199_source_dates >> trigger_facebook_1801919233484199
+# change_facebook_1843032105782331_source_dates >> trigger_facebook_1843032105782331
+# change_facebook_360061471554632_source_dates >> trigger_facebook_360061471554632
+# change_facebook_616509509961059_source_dates >> trigger_facebook_616509509961059
+# [trigger_facebook_1020643908514628,trigger_facebook_1801919233484199,trigger_facebook_1843032105782331,trigger_facebook_360061471554632,trigger_facebook_616509509961059] >> run_dbt_facebook
+run_dbt_facebook

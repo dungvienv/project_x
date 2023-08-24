@@ -3,6 +3,7 @@ from airflow.providers.docker.operators.docker import DockerOperator
 from airflow.providers.airbyte.operators.airbyte import AirbyteTriggerSyncOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
+from airflow.utils.dates import days_ago
 
 from datetime import datetime, timedelta
 import requests
@@ -11,7 +12,7 @@ import requests
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2023,1,1),
+    'start_date': days_ago(1),
     'email_on_failure': False,
     'email_on_retry': False,
     'retries':0,
@@ -30,16 +31,16 @@ def ab_partial_update_source(source_id:str, with_tz:bool,**context):
         body = {
             "sourceId":source_id,
             "connectionConfiguration":{
-                "start_date":context['data_interval_start'].replace(hour=7,minute=0,second=0).strftime('%Y-%m-%dT%H:%M:%SZ'),
-                "end_date":context['data_interval_end'].replace(hour=7,minute=0,second=0).strftime('%Y-%m-%dT%H:%M:%SZ')
+                "start_date":(context['data_interval_start'] - timedelta(days=7)).strftime('%Y-%m-%dT%H:%M:%SZ'),
+                "end_date":(context['data_interval_end']).strftime('%Y-%m-%dT%H:%M:%SZ'),
             }
         }
     else:
         body = {
             "sourceId":source_id,
             "connectionConfiguration":{
-                "start_date":context['data_interval_start'].replace(hour=0,minute=0,second=0).strftime('%Y-%m-%d'),
-                "end_date":context['data_interval_end'].replace(hour=0,minute=0,second=0).strftime('%Y-%m-%d')
+                "start_date":(context['data_interval_start'] - timedelta(days=7)).strftime('%Y-%m-%d'),
+                "end_date":(context['data_interval_end']).strftime('%Y-%m-%d')
             }
         }
     result = requests.post(url,json=body,auth=('airbyte','password'))
@@ -59,24 +60,25 @@ dag = DAG(
 
 # Define the tasks
 
-change_titkok_source_dates = PythonOperator(
-    task_id='change_tiktok_source_dates',
-    python_callable=ab_partial_update_source,
-    provide_context=True,
-    op_kwargs={'source_id':'1cf2ef65-9291-498a-bce5-361c470bdae2','with_tz':False},
-    dag=dag
-)
+# change_titkok_source_dates = PythonOperator(
+#     task_id='change_tiktok_source_dates',
+#     python_callable=ab_partial_update_source,
+#     provide_context=True,
+#     op_kwargs={'source_id':'58471ac8-37c2-46b5-8a44-63493c9daf4b','with_tz':False},
+#     dag=dag
+# )
 
 
-trigger_tiktok = AirbyteTriggerSyncOperator(
-    task_id='trigger_tiktok',
-    airbyte_conn_id = 'airbyte_conn',
-    connection_id = '1c7b0709-6307-43a2-8266-0579fdf789d2',
-    asynchronous=False,
-    # execution_timeout=timedelta(minutes=5),
-    retries=0,
-    dag=dag
-)
+# trigger_tiktok = AirbyteTriggerSyncOperator(
+#     task_id='trigger_tiktok',
+#     airbyte_conn_id = 'airbyte_conn',
+#     connection_id = '8bddbf3b-7ed4-4fda-95d3-0b69c366b053',
+#     asynchronous=False,
+#     # execution_timeout=timedelta(minutes=5),
+#     retries=0,
+#     timeout=18000,
+#     dag=dag
+# )
 
 
 run_dbt_tiktok = DockerOperator(
@@ -87,11 +89,12 @@ run_dbt_tiktok = DockerOperator(
     environment={'ORA_PYTHON_DRIVER_TYPE':'thin'},
     command='/bin/bash -c "dbt build -m +int__tiktok__ad_insights"',
     retries=0,
-    # retry_delay=timedelta(minutes=20),
+    # retry_delay=timedelta(minutes=2),
     # execution_timeout=timedelta(minutes=2),
     dag=dag,
 )
 
-
 # Define task dependencies
-change_titkok_source_dates >> trigger_tiktok >> run_dbt_tiktok
+# change_titkok_source_dates >> trigger_tiktok >> run_dbt_tiktok
+
+run_dbt_tiktok
