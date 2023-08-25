@@ -61,22 +61,22 @@ dag = DAG(
 # Define the tasks
 
 
-# change_google_source_dates = PythonOperator(
-#     task_id='change_google_source_dates',
-#     python_callable=ab_partial_update_source,
-#     provide_context=True,
-#     op_kwargs={'source_id':'322ae0dc-503e-4f6d-b9f3-565a99359c36','with_tz':False},
-#     dag=dag
-# )
+change_google_source_dates = PythonOperator(
+    task_id='change_google_source_dates',
+    python_callable=ab_partial_update_source,
+    provide_context=True,
+    op_kwargs={'source_id':'322ae0dc-503e-4f6d-b9f3-565a99359c36','with_tz':False},
+    dag=dag
+)
 
-# trigger_google = AirbyteTriggerSyncOperator(
-#     task_id='trigger_google',
-#     airbyte_conn_id = 'airbyte_conn',
-#     connection_id = '180e1bb1-711f-4e17-8fe0-e9281d3130b8',
-#     asynchronous=False,
-#     timeout=18000,
-#     dag=dag
-# )
+trigger_google = AirbyteTriggerSyncOperator(
+    task_id='trigger_google',
+    airbyte_conn_id = 'airbyte_conn',
+    connection_id = '180e1bb1-711f-4e17-8fe0-e9281d3130b8',
+    asynchronous=False,
+    timeout=18000,
+    dag=dag
+)
 
 run_dbt_google = DockerOperator(
     task_id='run_dbt_google',
@@ -84,7 +84,7 @@ run_dbt_google = DockerOperator(
     api_version='auto',
     auto_remove=True,
     environment={'ORA_PYTHON_DRIVER_TYPE':'thin'},
-    command='/bin/bash -c "dbt build -m +int__google__ad_insights"',
+    command='/bin/bash -c "dbt build -m +int__google__ad_insights --full-refresh"',
     retries=0,
     # retry_delay=timedelta(minutes=20),
     # execution_timeout=timedelta(minutes=2),
@@ -93,5 +93,4 @@ run_dbt_google = DockerOperator(
 
 
 # Define task dependencies
-# change_google_source_dates >> trigger_google >> run_dbt_google
-run_dbt_google
+change_google_source_dates >> trigger_google >> run_dbt_google

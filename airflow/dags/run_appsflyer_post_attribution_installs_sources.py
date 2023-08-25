@@ -28,8 +28,8 @@ appsflyer_dir = 'temp/appsflyer/post_attribution_installs/'
 sync_cmd = f'aws s3 sync \
             --region "eu-west-1" \
             --exclude "*" \
-            --include "t=post_attribution_installs/dt={aws_date_param}/*.parquet" \
-            --include "t=post_attribution_installs/dt={aws_prev_date_param}/*.parquet" \
+            --include "t=installs/dt={aws_date_param}/*.parquet" \
+            --include "t=installs/dt={aws_prev_date_param}/*.parquet" \
             --delete \
             s3://af-ext-reports/b5ef-acc-vh9FVWSA-b5ef/mkt-gma/ $AIRFLOW_HOME/{appsflyer_dir}'
 

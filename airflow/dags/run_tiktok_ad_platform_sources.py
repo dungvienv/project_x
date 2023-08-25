@@ -60,25 +60,25 @@ dag = DAG(
 
 # Define the tasks
 
-# change_titkok_source_dates = PythonOperator(
-#     task_id='change_tiktok_source_dates',
-#     python_callable=ab_partial_update_source,
-#     provide_context=True,
-#     op_kwargs={'source_id':'58471ac8-37c2-46b5-8a44-63493c9daf4b','with_tz':False},
-#     dag=dag
-# )
+change_titkok_source_dates = PythonOperator(
+    task_id='change_tiktok_source_dates',
+    python_callable=ab_partial_update_source,
+    provide_context=True,
+    op_kwargs={'source_id':'58471ac8-37c2-46b5-8a44-63493c9daf4b','with_tz':False},
+    dag=dag
+)
 
 
-# trigger_tiktok = AirbyteTriggerSyncOperator(
-#     task_id='trigger_tiktok',
-#     airbyte_conn_id = 'airbyte_conn',
-#     connection_id = '8bddbf3b-7ed4-4fda-95d3-0b69c366b053',
-#     asynchronous=False,
-#     # execution_timeout=timedelta(minutes=5),
-#     retries=0,
-#     timeout=18000,
-#     dag=dag
-# )
+trigger_tiktok = AirbyteTriggerSyncOperator(
+    task_id='trigger_tiktok',
+    airbyte_conn_id = 'airbyte_conn',
+    connection_id = '8bddbf3b-7ed4-4fda-95d3-0b69c366b053',
+    asynchronous=False,
+    # execution_timeout=timedelta(minutes=5),
+    retries=0,
+    timeout=18000,
+    dag=dag
+)
 
 
 run_dbt_tiktok = DockerOperator(
@@ -87,7 +87,7 @@ run_dbt_tiktok = DockerOperator(
     api_version='auto',
     auto_remove=True,
     environment={'ORA_PYTHON_DRIVER_TYPE':'thin'},
-    command='/bin/bash -c "dbt build -m +int__tiktok__ad_insights"',
+    command='/bin/bash -c "dbt build -m +int__tiktok__ad_insights --full-refresh"',
     retries=0,
     # retry_delay=timedelta(minutes=2),
     # execution_timeout=timedelta(minutes=2),
@@ -95,6 +95,4 @@ run_dbt_tiktok = DockerOperator(
 )
 
 # Define task dependencies
-# change_titkok_source_dates >> trigger_tiktok >> run_dbt_tiktok
-
-run_dbt_tiktok
+change_titkok_source_dates >> trigger_tiktok >> run_dbt_tiktok
