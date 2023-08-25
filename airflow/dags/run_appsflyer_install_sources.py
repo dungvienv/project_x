@@ -55,15 +55,22 @@ def extract_and_insert(dir_path,desination_table_name,oracle_conn_id) -> None:
 
     # Combine tables
     merged_table = pa.concat_tables(tables)
-    print('All merged!')
+    
     # Convert merged table to a Pandas DataFrame
     merged_df = merged_table.to_pandas()
     
     # Transform DataFrame rows to JSON
     json_data = merged_df.to_json(orient='records', lines=True)
+    print('All merged!')
     rows = [(json_item,) for json_item in json_data.split('\n') if json_item]
-    cursor.executemany(f"insert into {desination_table_name}(json_data) values (:1)", rows)
-    oracle_conn.commit()
+    sql = f"insert into {desination_table_name}(json_data) values (:1)"
+    start_pos = 0
+    batch_size = 15000
+    while start_pos < len(rows):
+        data = rows[start_pos:start_pos + batch_size]
+        start_pos += batch_size    
+        cursor.executemany(sql, data)
+        oracle_conn.commit()
     cursor.close()
     oracle_conn.close()
 
@@ -77,8 +84,8 @@ dag = DAG(
     'run_appsflyer_install_sources',
     default_args=default_args,
     schedule_interval='0 3 * * *',
-    start_date=days_ago(1),
-    catchup=False,
+    start_date=days_ago(15),
+    catchup=True,
     concurrency=1,
     max_active_runs=1
 )

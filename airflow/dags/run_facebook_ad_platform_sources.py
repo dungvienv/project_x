@@ -155,7 +155,7 @@ run_dbt_facebook = DockerOperator(
     api_version='auto',
     auto_remove=True,
     environment={'ORA_PYTHON_DRIVER_TYPE':'thin'},
-    command='/bin/bash -c "dbt build -m +int__facebook__ad_insights --full-refresh"',
+    command='/bin/bash -c "dbt build -m +int__facebook__ad_insights"',
     retries=0,
     # retry_delay=timedelta(minutes=20),
     # execution_timeout=timedelta(minutes=2),
