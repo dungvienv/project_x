@@ -11,11 +11,7 @@ models:
       enabled: true
       materialized: incremental
       incremental_strategy: merge
-      unique_key: dbt_key_skp_bod0_2_application
-      incremental_predicates : [
-        "DBT_INTERNAL_SOURCE.date_bod0 >= sysdate - 5",
-        "DBT_INTERNAL_SOURCE.date_bod01 >= sysdate - 5",
-      ]
+      unique_key: ['onl_bod0_key','onl_bod0_offer_type','onl_offer_id','key_skp_credit_case']
       tags: ['crm']
 
   - name: mart__mkt__bod0_2_source
@@ -29,7 +25,4 @@ models:
       materialized: incremental
       incremental_strategy: merge
       unique_key: dbt_key_skp_bod0_2_application
-      incremental_predicates : [
-        "DBT_INTERNAL_SOURCE.lead_timestamp >= sysdate - 30" 
-      ]
       tags: ['crm']

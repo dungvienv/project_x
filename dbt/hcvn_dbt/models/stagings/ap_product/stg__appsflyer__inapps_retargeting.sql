@@ -55,4 +55,4 @@ SELECT
 FROM src__appsflyer_inapps_retargeting
 )
 
-select * from final
+select distinct * from final

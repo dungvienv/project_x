@@ -56,4 +56,4 @@ SELECT
 FROM src__appsflyer_installs
 )
 
-select * from final
+select distinct * from final

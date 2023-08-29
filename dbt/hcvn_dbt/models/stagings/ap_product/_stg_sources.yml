@@ -126,3 +126,13 @@ sources:
       - name: CUSTOM_RAW_APPSFLYER_INAPPS
 
       - name: CUSTOM_RAW_APPSFLYER_INAPPS_RETARGETING
+
+      - name: AIRBYTE_RAW_GOOGLEADS_CAMPAIGNS
+        description: WIP
+        loaded_at_field: _AB_SOURCE_FILE_LAST_MODIFIED
+        freshness:
+          error_after:
+            count: 2
+            period: day
+          filter: _AB_SOURCE_FILE_LAST_MODIFIED >= sysdate - 3
+

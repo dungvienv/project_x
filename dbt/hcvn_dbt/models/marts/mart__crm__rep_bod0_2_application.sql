@@ -66,8 +66,8 @@ final as (
 select distinct * from final
 {% if is_incremental() %}
 where
-(date_bod01_bod02 >= (select max(date_bod01_bod02) from {{ this }}) and date_bod01_bod02 <= sysdate)
+(date_bod01_bod02 >= sysdate - 5)
 or 
-(date_bod0 >= (select max(date_bod0) from {{ this }}) and date_bod0 <= sysdate)
+(date_bod0 >= sysdate - 5)
 
 {% endif %}

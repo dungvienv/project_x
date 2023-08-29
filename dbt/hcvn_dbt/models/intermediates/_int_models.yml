@@ -71,7 +71,7 @@ models:
     config:
       materialized: incremental
       incremental_strategy: merge
-      unique_key: dbt_key_id
+      unique_key: ['ad_id','stat_time_day']
       enabled: true
       parallel: 8
 
@@ -79,15 +79,24 @@ models:
     config:
       materialized: incremental
       incremental_strategy: merge
-      unique_key: dbt_key_id
+      unique_key: ['ad_group_ad_id','segments_date','segments_ad_network_type']
       enabled: true
       parallel: 8
+
+  - name: int__google__campaigns
+    config:
+      materialized: incremental
+      incremental_strategy: merge
+      unique_key: ['campaign_id','segments_date','segments_hour','segments_ad_network_type']
+      enabled: true
+      parallel: 8
+
 
   - name: int__facebook__ad_insights
     config:
       materialized: incremental
       incremental_strategy: merge
-      unique_key: dbt_key_id
+      unique_key: ['ad_id','date_start']
       enabled: true
       parallel: 8
 
@@ -95,7 +104,7 @@ models:
     config:
       materialized: incremental
       incremental_strategy: merge
-      unique_key: dbt_key_id
+      unique_key: ['appsflyer_id','customer_user_id','advertising_id','install_time','event_time','media_source','is_primary_attribution']
       enabled: true
       parallel: 8
 
@@ -103,7 +112,7 @@ models:
     config:
       materialized: incremental
       incremental_strategy: merge
-      unique_key: dbt_key_id
+      unique_key: ['appsflyer_id','customer_user_id','advertising_id','install_time','event_time','media_source','is_primary_attribution']
       enabled: true
       parallel: 8
 
@@ -111,6 +120,6 @@ models:
     config:
       materialized: incremental
       incremental_strategy: merge
-      unique_key: dbt_key_id
+      unique_key: ['appsflyer_id','customer_user_id','advertising_id','install_time','event_time','media_source','is_primary_attribution']
       enabled: true
       parallel: 8

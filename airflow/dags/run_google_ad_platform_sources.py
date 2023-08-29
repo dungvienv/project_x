@@ -12,7 +12,7 @@ import requests
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': days_ago(1),
+    'start_date': days_ago(30),
     'email_on_failure': False,
     'email_on_retry': False,
     'retries':0,
@@ -84,7 +84,7 @@ run_dbt_google = DockerOperator(
     api_version='auto',
     auto_remove=True,
     environment={'ORA_PYTHON_DRIVER_TYPE':'thin'},
-    command='/bin/bash -c "dbt build -m +int__google__ad_insights"',
+    command='/bin/bash -c "dbt build -m +int__google__ad_insights +int__google__campaigns"',
     retries=0,
     # retry_delay=timedelta(minutes=20),
     # execution_timeout=timedelta(minutes=2),

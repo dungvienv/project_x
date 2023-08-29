@@ -25,7 +25,8 @@ default_args = {
 aws_date_param = '{{ macros.ds_add(data_interval_end | ds, -1) }}'
 aws_prev_date_param = '{{ macros.ds_add(data_interval_end | ds, -2) }}'
 appsflyer_dir = 'temp/appsflyer/inapps_retargeting/'
-sync_cmd = f'aws s3 sync \
+sync_cmd = f' rm -rf $AIRFLOW_HOME/{appsflyer_dir} &&\
+            aws s3 sync \
             --region "eu-west-1" \
             --exclude "*" \
             --include "t=inapps_retargeting/dt={aws_date_param}/*.parquet" \
@@ -37,7 +38,7 @@ destination_table = 'CUSTOM_RAW_APPSFLYER_INAPPS_RETARGETING'
 oracle_conn_id='oracle_conn'
 
 # Define functions
-def extract_and_insert(dir_path,desination_table_name,oracle_conn_id) -> None:
+def extract_and_insert(dir_path,destination_table_name,oracle_conn_id) -> None:
     oracle_hook = OracleHook(oracle_conn_id)
     oracle_conn = oracle_hook.get_conn()
     cursor = oracle_conn.cursor()
@@ -63,7 +64,7 @@ def extract_and_insert(dir_path,desination_table_name,oracle_conn_id) -> None:
     json_data = merged_df.to_json(orient='records', lines=True)
     print('All merged!')
     rows = [(json_item,) for json_item in json_data.split('\n') if json_item]
-    sql = f"insert into {desination_table_name}(json_data) values (:1)"
+    sql = f"insert into {destination_table_name}(json_data) values (:1)"
     start_pos = 0
     batch_size = 15000
     while start_pos < len(rows):
@@ -75,6 +76,9 @@ def extract_and_insert(dir_path,desination_table_name,oracle_conn_id) -> None:
     oracle_conn.close()
 
     
+
+
+
 # Define the DAG
 dag = DAG(
     'run_appsflyer_inapps_retargeting_sources',
@@ -131,7 +135,7 @@ create_appsflyer_inapps_retargeting_dir = BashOperator(
 oracle_insert_operator = PythonOperator(
     task_id = 'oracle_insert_operator',
     python_callable=extract_and_insert,
-    op_kwargs={"dir_path":appsflyer_dir, "desination_table_name":destination_table, "oracle_conn_id":oracle_conn_id},
+    op_kwargs={"dir_path":appsflyer_dir, "destination_table_name":destination_table, "oracle_conn_id":oracle_conn_id},
     dag=dag,
 )
 

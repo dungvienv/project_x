@@ -55,4 +55,4 @@ select
 from src__appsflyer_inapps
 )
 
-select * from final
+select distinct * from final
