@@ -83,9 +83,9 @@ def extract_and_insert(dir_path,destination_table_name,oracle_conn_id) -> None:
 dag = DAG(
     'run_appsflyer_inapps_sources',
     default_args=default_args,
-    schedule_interval='0 3 * * *',
-    start_date=days_ago(15),
-    catchup=True,
+    schedule_interval=timedelta(hours=3),
+    start_date=days_ago(1),
+    catchup=False,
     concurrency=1,
     max_active_runs=1
 )

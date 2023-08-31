@@ -21,19 +21,10 @@ dag = DAG(
     'dbt__run_crm_mart',
     default_args=default_args,
     description='An example DAG with DockerOperator',
-    schedule_interval=timedelta(days=1),  # Set the schedule interval
+    schedule_interval=timedelta(hours=3),  # Set the schedule interval
 )
 
 # Define the tasks
-build_images = BashOperator(
-    task_id='build_images',
-    bash_command=f"""
-        cd / && 
-        cd {dbt_project_dir} && 
-        ./build-dbt-platform.sh 
-    """,
-    dag=dag,
-)
 
 run_dbt_debug = DockerOperator(
     task_id='run_dbt_debug',
@@ -73,11 +64,11 @@ run_crm_mart_and_all_children = DockerOperator(
     auto_remove=True,
     environment={'ORA_PYTHON_DRIVER_TYPE':'thin'},
     command='/bin/bash -c "dbt build -m +mart__crm__rep_bod0_2_application"',
-    retries=10,
+    retries=0,
     # retry_delay=timedelta(minutes=20),
     execution_timeout=timedelta(hours=1),
     dag=dag,
 )
 
 # Define task dependencies
-build_images >> run_dbt_debug >> check_crm_ddl_modified >> [check_source_freshness, run_crm_mart_and_all_children]
+run_dbt_debug >> check_crm_ddl_modified >> [check_source_freshness, run_crm_mart_and_all_children]

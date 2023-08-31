@@ -16,7 +16,7 @@ default_args = {
     'email_on_failure': False,
     'email_on_retry': False,
     'retries':0,
-    'catchup':True,
+    'catchup':False,
 
 }
 
@@ -53,9 +53,10 @@ dag = DAG(
     'run_facebook_ad_platform_sources',
     default_args=default_args,
     description='An example DAG with DockerOperator',
-    schedule_interval=timedelta(days=1),  # Set the schedule interval
+    schedule_interval=timedelta(hours=2),  # Set the schedule interval
     concurrency=1,
-    max_active_runs=1
+    max_active_runs=1,
+    catchup=False
 )
 
 # Define the tasks
