@@ -10,4 +10,4 @@ hcvn_dbt:
             protocol: tcp
             schema: AP_PRODUCT
             service: hdwvn.homecredit.vn
-            threads: 10
+            threads: 5

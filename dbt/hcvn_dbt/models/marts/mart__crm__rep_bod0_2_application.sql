@@ -66,8 +66,8 @@ final as (
 select distinct * from final
 {% if is_incremental() %}
 where
-(date_bod01_bod02 >= sysdate - 5)
+(date_bod01_bod02 >= sysdate - 14)
 or 
-(date_bod0 >= sysdate - 5)
+(date_bod0 >= sysdate - 14)
 
 {% endif %}

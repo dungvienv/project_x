@@ -47,34 +47,23 @@ def extract_and_insert(dir_path,destination_table_name,oracle_conn_id) -> None:
     for root, dirs, files in os.walk(dir_path, topdown=False):
         for file in files:
             if file.endswith(".parquet"):
-                print(f'Reading file: {file}')
                 file_paths.append(os.path.join(root,file))
 
-     
-    # Read Parquet files
-    tables = [pq.read_table(file) for file in file_paths]
+    for file in file_paths:
+        print(f'Reading file: {file}')
+        json_data = pq.read_table(file).to_pandas().to_json(orient='records', lines=True)
+        rows = [(json_item,) for json_item in json_data.split('\n') if json_item]
+        sql = f"insert into {destination_table_name}(json_data) values (:1)"
+        start_pos = 0
+        batch_size = 15000
+        while start_pos < len(rows):
+            data = rows[start_pos:start_pos + batch_size]
+            start_pos += batch_size    
+            cursor.executemany(sql, data)
+            oracle_conn.commit()
 
-    # Combine tables
-    merged_table = pa.concat_tables(tables)
-    
-    # Convert merged table to a Pandas DataFrame
-    merged_df = merged_table.to_pandas()
-    
-    # Transform DataFrame rows to JSON
-    json_data = merged_df.to_json(orient='records', lines=True)
-    print('All merged!')
-    rows = [(json_item,) for json_item in json_data.split('\n') if json_item]
-    sql = f"insert into {destination_table_name}(json_data) values (:1)"
-    start_pos = 0
-    batch_size = 15000
-    while start_pos < len(rows):
-        data = rows[start_pos:start_pos + batch_size]
-        start_pos += batch_size    
-        cursor.executemany(sql, data)
-        oracle_conn.commit()
     cursor.close()
     oracle_conn.close()
-
     
 
 
@@ -83,8 +72,8 @@ def extract_and_insert(dir_path,destination_table_name,oracle_conn_id) -> None:
 dag = DAG(
     'run_appsflyer_inapps_sources',
     default_args=default_args,
-    schedule_interval=timedelta(hours=3),
-    start_date=days_ago(1),
+    schedule_interval=timedelta(days=1),
+    start_date=datetime(2023,9,1,9,30,0),
     catchup=False,
     concurrency=1,
     max_active_runs=1

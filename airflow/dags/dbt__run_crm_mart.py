@@ -8,7 +8,7 @@ from airflow.utils.dates import days_ago
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': days_ago(1),
+    'start_date': datetime(2023,9,1,8,0,0),
     'email_on_failure': False,
     'email_on_retry': False,
 
@@ -21,7 +21,8 @@ dag = DAG(
     'dbt__run_crm_mart',
     default_args=default_args,
     description='An example DAG with DockerOperator',
-    schedule_interval=timedelta(hours=3),  # Set the schedule interval
+    schedule_interval=timedelta(hours=5),  # Set the schedule interval,
+    catchup=False
 )
 
 # Define the tasks
@@ -46,17 +47,6 @@ check_crm_ddl_modified = DockerOperator(
     dag=dag,
 )
 
-check_source_freshness = DockerOperator(
-    task_id='check_source_freshness',
-    image='dbt-dbt',
-    api_version='auto',
-    auto_remove=True,
-    environment={'ORA_PYTHON_DRIVER_TYPE':'thin'},
-    command='/bin/bash -c "dbt source freshness"',
-    retries=0,
-    dag=dag,
-)
-
 run_crm_mart_and_all_children = DockerOperator(
     task_id='run_crm_mart_and_all_children',
     image='dbt-dbt',
@@ -71,4 +61,4 @@ run_crm_mart_and_all_children = DockerOperator(
 )
 
 # Define task dependencies
-run_dbt_debug >> check_crm_ddl_modified >> [check_source_freshness, run_crm_mart_and_all_children]
+run_dbt_debug >> check_crm_ddl_modified >> run_crm_mart_and_all_children

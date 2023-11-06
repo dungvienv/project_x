@@ -12,7 +12,7 @@ import requests
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': days_ago(1),
+    'start_date': datetime(2023,9,1,8,0,0),
     'email_on_failure': False,
     'email_on_retry': False,
     'retries':0,
@@ -52,7 +52,7 @@ dag = DAG(
     'run_tiktok_ad_platform_sources',
     default_args=default_args,
     description='An example DAG with DockerOperator',
-    schedule_interval=timedelta(hours=2),  # Set the schedule interval
+    schedule_interval='* 1 * * *',  # Set the schedule interval
     concurrency=1,
     max_active_runs=1,
     catchup=False
